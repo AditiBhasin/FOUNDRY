@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStartup, AGENT_CONFIGS } from '../state/startupState';
 import EvidenceBadge from '../components/EvidenceBadge';
@@ -9,38 +9,223 @@ export default function MVPPlayground() {
   // Active Screen within the prototype
   const [activeScreenId, setActiveScreenId] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [selectedFilter, setSelectedFilter] = useState('All Matches');
   const [selectedItem, setSelectedItem] = useState(null);
   const [generatedOutput, setGeneratedOutput] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [kanbanItems, setKanbanItems] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
-  const productCfg = AGENT_CONFIGS.product;
+  // Dynamic fallback generator if mvpSpec has not finished generating
+  const dynamicSpec = useMemo(() => {
+    if (mvpSpec) return mvpSpec;
 
-  // Fallback spec if workflow hasn't finished
-  const fallbackSpec = {
-    app_name: 'VentureFlow Prototype',
-    tagline: startupData?.product?.product_summary || 'Autonomous AI-Powered MVP Prototype',
-    target_persona: startupData?.product?.target_user || 'Target Users & Early Operators',
-    navigation: [
-      { id: 'dashboard', title: 'Command Center', icon: '⚡' },
-      { id: 'discovery', title: 'Discover & Search', icon: '🔍' },
-      { id: 'tracker', title: 'Pipeline Tracker', icon: '📋' },
-      { id: 'assistant', title: 'AI Tailor & Generator', icon: '✨' },
-      { id: 'analytics', title: 'Performance Analytics', icon: '📊' },
-    ],
-    sample_entities: [
-      { id: 'ent-1', title: 'AI Engineering Specialist Role', company: 'NeuralForge Labs', location: 'Remote', match_score: 96, status: 'Ready', compensation: '$120k / yr', deadline: '3 days left' },
-      { id: 'ent-2', title: 'Product Architecture Fellowship', company: 'Axiom Dynamics', location: 'San Francisco', match_score: 92, status: 'Interview', compensation: '$95k / yr', deadline: '1 week left' },
-      { id: 'ent-3', title: 'Data Pipeline Infrastructure Lead', company: 'Voxel Distributed', location: 'Remote / NYC', match_score: 88, status: 'Tailoring', compensation: '$135k / yr', deadline: '5 days left' },
-      { id: 'ent-4', title: 'Autonomous Operations Associate', company: 'Hyperion AI', location: 'Austin, TX', match_score: 84, status: 'Applied', compensation: '$85k / yr', deadline: 'Closed' },
-    ],
-    screens: [],
-  };
+    // Generate responsive profile directly from the current idea
+    const cleanIdea = (idea || 'Autonomous AI Venture').trim();
+    const words = cleanIdea.split(' ').filter((w) => w.length > 2);
+    const appName = words.length >= 2 ? `${words[0]}${words[1]}` : `${words[0] || 'Venture'}AI`;
+    const targetUser = startupData?.product?.target_user || 'Target Customers & Operators';
 
-  const spec = mvpSpec || fallbackSpec;
-  const entities = spec.sample_entities || fallbackSpec.sample_entities;
+    return {
+      app_name: appName,
+      tagline: startupData?.product?.product_summary || `AI Platform for ${cleanIdea}`,
+      target_persona: targetUser,
+      navigation: [
+        { id: 'dashboard', title: 'Command Center', icon: '⚡' },
+        { id: 'discovery', title: 'Explore & Search', icon: '🔍' },
+        { id: 'tracker', title: 'Pipeline Tracker', icon: '📋' },
+        { id: 'assistant', title: 'AI Generator', icon: '✨' },
+        { id: 'analytics', title: 'Analytics', icon: '📊' },
+      ],
+      screens: [
+        {
+          id: 'dashboard',
+          title: 'Command Center',
+          icon: '⚡',
+          components: [
+            {
+              id: 'kpi-metrics',
+              type: 'metric_card',
+              title: 'Key Operational Metrics',
+              data: [
+                { label: 'Active Pipeline Items', value: '184', change: '+18.4%', trend: 'up', color: '#00F0FF' },
+                { label: 'Algorithmic Match Rate', value: '96.2%', change: '+4.2%', trend: 'up', color: '#10B981' },
+                { label: 'Throughput Speed', value: '0.9s', change: '-32%', trend: 'up', color: '#8B5CF6' },
+                { label: 'Conversion Efficiency', value: '38.4%', change: '+14.6%', trend: 'up', color: '#FB923C' },
+              ],
+            },
+            {
+              id: 'active-feed',
+              type: 'data_table',
+              title: 'High-Priority Workstreams',
+            },
+          ],
+        },
+        {
+          id: 'discovery',
+          title: 'Discovery Explorer',
+          icon: '🔍',
+          components: [
+            {
+              id: 'search-filter-bar',
+              type: 'search_filter',
+              properties: {
+                placeholder: `Search items by keywords, specifications, or parameters for ${cleanIdea.slice(0, 30)}...`,
+                filters: ['All Matches', 'Score > 90%', 'High Priority'],
+              },
+            },
+          ],
+        },
+        {
+          id: 'tracker',
+          title: 'Execution Tracker',
+          icon: '📋',
+          components: [
+            {
+              id: 'kanban-workflow',
+              type: 'kanban',
+              title: 'Status Pipeline',
+              data: [
+                { column: '1. Ingested', count: 18 },
+                { column: '2. Processing', count: 7 },
+                { column: '3. Action Active', count: 12 },
+                { column: '4. Converted / Done', count: 5 },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'assistant',
+          title: 'AI Intelligence Generator',
+          icon: '✨',
+          components: [
+            {
+              id: 'tailor-form',
+              type: 'form',
+              title: `Generate AI Optimization Dossier for ${appName}`,
+            },
+          ],
+        },
+        {
+          id: 'analytics',
+          title: 'Analytics & Telemetry',
+          icon: '📊',
+          components: [
+            {
+              id: 'analytics-chart-summary',
+              type: 'chart',
+              title: 'Conversion Funnel & Velocity',
+              data: [
+                { label: '1. Total Ingested Items', value: 520 },
+                { label: '2. AI Matches Identified', value: 168 },
+                { label: '3. Automated Actions Synthesized', value: 48 },
+                { label: '4. Active Approvals & Conversions', value: 16 },
+                { label: '5. Completed Transactions', value: 6 },
+              ],
+            },
+          ],
+        },
+      ],
+      sample_entities: [
+        {
+          id: 'ent-1',
+          title: `Autonomous ${cleanIdea.slice(0, 35)} Primary Flow`,
+          company: `${appName} Core Network`,
+          location: 'Cloud Cluster Alpha',
+          match_score: 98,
+          status: 'Active & Processing',
+          compensation: '99.4% Efficiency',
+          deadline: 'Live Now',
+          badge: 'Optimal',
+        },
+        {
+          id: 'ent-2',
+          title: `High-Throughput Optimization Stream`,
+          company: 'Synthetix Operations',
+          location: 'Distributed Edge Pod',
+          match_score: 94,
+          status: 'Velocity +34%',
+          compensation: '8.4k ops/sec',
+          deadline: 'Running Cycle',
+          badge: 'Accelerating',
+        },
+        {
+          id: 'ent-3',
+          title: `Custom Intelligence & Parameter Adapter`,
+          company: 'Voxel Distributed Hub',
+          location: 'Secure Node',
+          match_score: 90,
+          status: 'Audited by AI Agent',
+          compensation: 'Zero Error Output',
+          deadline: 'Scheduled in 2h',
+          badge: 'Verified',
+        },
+        {
+          id: 'ent-4',
+          title: `Real-Time Performance Engine`,
+          company: `${appName} Telemetry`,
+          location: 'Ingestion Cluster',
+          match_score: 86,
+          status: 'Active Live Stream',
+          compensation: '99.9% Uptime',
+          deadline: 'Continuous',
+          badge: 'Standard',
+        },
+      ],
+      interactive_actions: [
+        'Instant Match Workstreams',
+        'One-Click AI Optimization',
+        'Export Action Dossier',
+        'Trigger Automated Workflow',
+      ],
+    };
+  }, [mvpSpec, idea, startupData]);
+
+  const spec = dynamicSpec;
+  const entities = spec.sample_entities || [];
+
+  // Extract screens from spec safely
+  const screens = spec.screens || [];
+  const dashboardScreen = screens.find((s) => s.id === 'dashboard') || screens[0];
+  const discoveryScreen = screens.find((s) => s.id === 'discovery') || screens[1];
+  const trackerScreen = screens.find((s) => s.id === 'tracker') || screens[2];
+  const assistantScreen = screens.find((s) => s.id === 'assistant') || screens[3];
+  const analyticsScreen = screens.find((s) => s.id === 'analytics') || screens[4];
+
+  // Dynamic KPI metrics
+  const kpiData = dashboardScreen?.components?.find((c) => c.type === 'metric_card')?.data || [
+    { label: 'Active Pipeline Items', value: '184', change: '+18.4%', color: '#00F0FF' },
+    { label: 'Algorithmic Accuracy', value: '96.2%', change: '+4.2%', color: '#10B981' },
+    { label: 'Response Velocity', value: '0.9s', change: '-32%', color: '#8B5CF6' },
+    { label: 'Conversion Rate', value: '38.4%', change: '+14.6%', color: '#FB923C' },
+  ];
+
+  // Dynamic Search placeholder & filters
+  const searchFilterComp = discoveryScreen?.components?.find((c) => c.type === 'search_filter');
+  const searchPlaceholder = searchFilterComp?.properties?.placeholder || `Search ${spec.app_name} items by keywords, specifications, or location...`;
+  const availableFilters = searchFilterComp?.properties?.filters || ['All Matches', 'Score > 90%', 'High Priority'];
+
+  // Dynamic Kanban Columns
+  const kanbanComp = trackerScreen?.components?.find((c) => c.type === 'kanban');
+  const kanbanColumns = kanbanComp?.data || [
+    { column: '1. Ingested Stream', count: 18 },
+    { column: '2. AI Optimization', count: 7 },
+    { column: '3. Action Active', count: 12 },
+    { column: '4. Converted / Done', count: 5 },
+  ];
+
+  // Dynamic Form Title
+  const formComp = assistantScreen?.components?.find((c) => c.type === 'form');
+  const formTitle = formComp?.title || `Generate AI-Optimized Action Package for ${spec.app_name}`;
+
+  // Dynamic Analytics Bars
+  const analyticsComp = analyticsScreen?.components?.find((c) => c.type === 'chart');
+  const analyticsBars = analyticsComp?.data || [
+    { label: '1. Total Ingested Items', value: 520 },
+    { label: '2. High-Confidence AI Matches', value: 168 },
+    { label: '3. Automated Actions Synthesized', value: 48 },
+    { label: '4. Active Approvals & Conversions', value: 16 },
+    { label: '5. Completed Transactions', value: 6 },
+  ];
 
   // Show quick toast notification
   const triggerToast = (msg) => {
@@ -50,16 +235,17 @@ export default function MVPPlayground() {
 
   // Filter entities by search and filter tag
   const filteredEntities = entities.filter((item) => {
-    const matchesSearch = searchQuery === '' ||
+    const matchesSearch =
+      searchQuery === '' ||
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (selectedFilter === 'Match > 90%') {
+    if (selectedFilter === 'Score > 90%' || selectedFilter === 'Match > 90%') {
       return matchesSearch && item.match_score >= 90;
     }
-    if (selectedFilter === 'Remote') {
-      return matchesSearch && item.location.toLowerCase().includes('remote');
+    if (selectedFilter === 'High Priority' || selectedFilter === 'High Match') {
+      return matchesSearch && (item.badge === 'Optimal' || item.badge === 'High Match' || item.match_score >= 92);
     }
     return matchesSearch;
   });
@@ -71,21 +257,22 @@ export default function MVPPlayground() {
     setTimeout(() => {
       setIsGenerating(false);
       setGeneratedOutput({
-        title: `AI-Optimized Dossier for ${selectedItem?.title || 'Selected Opportunity'}`,
+        title: `AI-Optimized Action Dossier for ${selectedItem?.title || entities[0]?.title || spec.app_name}`,
         highlights: [
-          'High-precision alignment with job requirements (Score: 98/100)',
-          'Custom tailored experience narrative highlighting relevant full-stack AI skills',
-          'Formatted cover letter with matching terminology and company value proposition',
+          `Target Domain: ${spec.app_name} (${spec.target_persona})`,
+          `Confidence Match Score: 98/100 verified by ${spec.app_name} AI engine`,
+          'Automated parameter synthesis & risk mitigation rules applied successfully',
+          'Formatted execution output package ready for pipeline dispatch',
         ],
         timestamp: new Date().toLocaleTimeString(),
       });
-      triggerToast('✓ Prototype Generated Tailored Application Dossier!');
-    }, 1200);
+      triggerToast(`✓ Generated Personalized Intelligence for ${spec.app_name}!`);
+    }, 1100);
   };
 
   return (
     <div className="mvp-playground-screen" style={{ maxWidth: '1280px', margin: '0 auto', paddingBottom: '3rem' }}>
-      {/* Prototype Prototype Banner (Required) */}
+      {/* Prototype Header Banner */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -110,11 +297,11 @@ export default function MVPPlayground() {
                 AI-GENERATED MVP PROTOTYPE
               </span>
               <span style={{ background: 'rgba(251, 146, 60, 0.25)', color: '#FB923C', padding: '0.1rem 0.5rem', borderRadius: '4px', fontSize: '0.68rem', fontFamily: 'var(--font-mono)' }}>
-                INTERACTIVE SANDBOX
+                PERSONALIZED FOR YOUR IDEA
               </span>
             </div>
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', marginTop: '0.15rem' }}>
-              Synthesized from Product Agent & CTO technical specifications for: <strong>"{idea || 'Autonomous Venture'}"</strong>.
+              Generated prototype for: <strong style={{ color: '#fff' }}>"{idea || 'Autonomous Venture'}"</strong>.
             </div>
           </div>
         </div>
@@ -129,7 +316,7 @@ export default function MVPPlayground() {
         </div>
       </motion.div>
 
-      {/* Main Prototype Shell */}
+      {/* Main Interactive Prototype Shell */}
       <div
         style={{
           borderRadius: '16px',
@@ -156,8 +343,8 @@ export default function MVPPlayground() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div
               style={{
-                width: '36px',
-                height: '36px',
+                width: '38px',
+                height: '38px',
                 borderRadius: '8px',
                 background: 'linear-gradient(135deg, #00F0FF, #FB923C)',
                 display: 'flex',
@@ -166,23 +353,24 @@ export default function MVPPlayground() {
                 fontWeight: '900',
                 color: '#070a14',
                 fontFamily: 'var(--font-display)',
+                fontSize: '1.1rem',
               }}
             >
               {spec.app_name?.charAt(0) || 'V'}
             </div>
             <div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: '800', color: '#fff' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: '800', color: '#fff' }}>
                 {spec.app_name}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
                 Target: {spec.target_persona}
               </div>
             </div>
           </div>
 
-          {/* Screen Navigation Tabs */}
-          <div style={{ display: 'flex', gap: '0.4rem', background: 'rgba(5, 8, 16, 0.6)', padding: '0.3rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-            {(spec.navigation || fallbackSpec.navigation).map((nav) => (
+          {/* Dynamic Navigation Tabs */}
+          <div style={{ display: 'flex', gap: '0.4rem', background: 'rgba(5, 8, 16, 0.6)', padding: '0.3rem', borderRadius: '10px', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
+            {(spec.navigation || []).map((nav) => (
               <button
                 key={nav.id}
                 onClick={() => {
@@ -211,57 +399,45 @@ export default function MVPPlayground() {
             ))}
           </div>
 
-          {/* Quick Prototype Action */}
+          {/* Quick Action Button */}
           <button
             className="btn-primary-glow"
             onClick={() => triggerToast(`⚡ Autonomous sync triggered for ${spec.app_name}!`)}
             style={{ fontSize: '0.8rem', padding: '0.45rem 1rem' }}
           >
-            ⚡ Test Live Sync
+            ⚡ Test Prototype Sync
           </button>
         </div>
 
-        {/* Prototype Screen Viewport */}
+        {/* Screen Viewport */}
         <div style={{ padding: '2rem' }}>
           {/* SCREEN 1: DASHBOARD / COMMAND CENTER */}
           {activeScreenId === 'dashboard' && (
             <div>
-              {/* KPI Metric Cards */}
+              {/* Dynamic KPI Tiles */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.2rem', marginBottom: '2rem' }}>
-                <div className="detail-section-card" style={{ borderLeft: '3px solid #00F0FF' }}>
-                  <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>ACTIVE PIPELINE</div>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: '#00F0FF', margin: '0.3rem 0' }}>142</div>
-                  <div style={{ fontSize: '0.72rem', color: '#10B981' }}>↑ +18.4% this week</div>
-                </div>
-
-                <div className="detail-section-card" style={{ borderLeft: '3px solid #10B981' }}>
-                  <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>AI MATCH ACCURACY</div>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: '#10B981', margin: '0.3rem 0' }}>96.2%</div>
-                  <div style={{ fontSize: '0.72rem', color: '#10B981' }}>↑ High precision validation</div>
-                </div>
-
-                <div className="detail-section-card" style={{ borderLeft: '3px solid #8B5CF6' }}>
-                  <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>RESPONSE VELOCITY</div>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: '#8B5CF6', margin: '0.3rem 0' }}>1.4s</div>
-                  <div style={{ fontSize: '0.72rem', color: '#8B5CF6' }}>⚡ Optimized async queue</div>
-                </div>
-
-                <div className="detail-section-card" style={{ borderLeft: '3px solid #FB923C' }}>
-                  <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>CONVERSION RATE</div>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: '#FB923C', margin: '0.3rem 0' }}>31.8%</div>
-                  <div style={{ fontSize: '0.72rem', color: '#FB923C' }}>↑ 3.2x industry baseline</div>
-                </div>
+                {kpiData.map((kpi, idx) => (
+                  <div key={idx} className="detail-section-card" style={{ borderLeft: `3px solid ${kpi.color || '#00F0FF'}` }}>
+                    <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                      {kpi.label}
+                    </div>
+                    <div style={{ fontSize: '1.9rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: kpi.color || '#00F0FF', margin: '0.3rem 0' }}>
+                      {kpi.value}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#10B981' }}>{kpi.change || '↑ High velocity'}</div>
+                  </div>
+                ))}
               </div>
 
-              {/* Feed & Quick Actions */}
+              {/* Feed & Interactive Inspector */}
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
                 <div className="detail-section-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <div className="detail-section-title">
                       <span>⚡</span>
-                      <span>PRIORITY MATCHES READY FOR ACTION</span>
+                      <span>ACTIVE WORKSTREAMS & MATCHES</span>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Click to inspect</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Click item to inspect</span>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -290,7 +466,7 @@ export default function MVPPlayground() {
 
                         <div style={{ textAlign: 'right' }}>
                           <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.2)', color: '#10B981', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
-                            {item.match_score}% Match
+                            {item.match_score}% Score
                           </span>
                           <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{item.deadline}</div>
                         </div>
@@ -299,7 +475,7 @@ export default function MVPPlayground() {
                   </div>
                 </div>
 
-                {/* Interactive Sidebar Inspector */}
+                {/* Sidebar Inspector */}
                 <div className="detail-section-card" style={{ background: 'rgba(14, 21, 38, 0.5)' }}>
                   <div className="detail-section-title" style={{ marginBottom: '1rem' }}>
                     <span>🎯</span>
@@ -315,10 +491,10 @@ export default function MVPPlayground() {
                         {selectedItem.company} ({selectedItem.location})
                       </div>
 
-                      <div style={{ padding: '0.75rem', background: 'rgba(5, 8, 16, 0.7)', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.8rem', lineHeight: '1.5' }}>
+                      <div style={{ padding: '0.75rem', background: 'rgba(5, 8, 16, 0.7)', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.8rem', lineHeight: '1.6' }}>
                         <div><strong>Status:</strong> {selectedItem.status}</div>
-                        <div><strong>Affinity:</strong> {selectedItem.match_score}% Algorithmic Match</div>
-                        <div><strong>Reward / Comp:</strong> {selectedItem.compensation}</div>
+                        <div><strong>Confidence:</strong> {selectedItem.match_score}% Algorithmic Match</div>
+                        <div><strong>Value / Score:</strong> {selectedItem.compensation}</div>
                         <div><strong>Timeline:</strong> {selectedItem.deadline}</div>
                       </div>
 
@@ -326,16 +502,16 @@ export default function MVPPlayground() {
                         className="btn-primary-glow"
                         onClick={() => {
                           setActiveScreenId('assistant');
-                          triggerToast(`Switched to AI Tailor for "${selectedItem.title}"`);
+                          triggerToast(`Switched to AI Generator for "${selectedItem.title}"`);
                         }}
                         style={{ width: '100%', padding: '0.7rem', fontSize: '0.85rem' }}
                       >
-                        ✨ Launch AI Tailoring Tool
+                        ✨ Launch AI Generator
                       </button>
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      Select any opportunity from the feed to inspect live prototype attributes and actions.
+                      Select any workstream item from the feed to inspect live prototype attributes and actions.
                     </div>
                   )}
                 </div>
@@ -343,14 +519,13 @@ export default function MVPPlayground() {
             </div>
           )}
 
-          {/* SCREEN 2: DISCOVERY & SEARCH */}
+          {/* SCREEN 2: DISCOVERY / SEARCH EXPLORER */}
           {activeScreenId === 'discovery' && (
             <div>
-              {/* Search & Filter Bar */}
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
                 <input
                   type="text"
-                  placeholder="Search opportunities by title, company, skills, or location..."
+                  placeholder={searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
@@ -366,8 +541,8 @@ export default function MVPPlayground() {
                   }}
                 />
 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {['All', 'Match > 90%', 'Remote'].map((flt) => (
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {availableFilters.map((flt) => (
                     <button
                       key={flt}
                       onClick={() => setSelectedFilter(flt)}
@@ -388,14 +563,14 @@ export default function MVPPlayground() {
                 </div>
               </div>
 
-              {/* Grid of Matched Opportunities */}
+              {/* Grid of Personalized Items */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
                 {filteredEntities.map((item) => (
                   <div
                     key={item.id}
                     className="detail-section-card"
                     style={{
-                      borderTop: `3px solid ${item.match_score >= 90 ? '#10B981' : '#00F0FF'}`,
+                      borderTop: `3px solid ${item.match_score >= 92 ? '#10B981' : '#00F0FF'}`,
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
@@ -414,8 +589,8 @@ export default function MVPPlayground() {
                       </div>
 
                       <div style={{ padding: '0.6rem', background: 'rgba(5, 8, 16, 0.5)', borderRadius: '6px', fontSize: '0.78rem', marginBottom: '1rem' }}>
-                        <div><strong>Compensation:</strong> {item.compensation}</div>
-                        <div><strong>Deadline:</strong> {item.deadline}</div>
+                        <div><strong>Metrics / Output:</strong> {item.compensation}</div>
+                        <div><strong>Status & Timeline:</strong> {item.status} ({item.deadline})</div>
                       </div>
                     </div>
 
@@ -438,7 +613,7 @@ export default function MVPPlayground() {
                         }}
                         style={{ flex: 1, padding: '0.5rem', fontSize: '0.78rem' }}
                       >
-                        ✨ Tailor Now
+                        ✨ Optimize Now
                       </button>
                     </div>
                   </div>
@@ -453,90 +628,90 @@ export default function MVPPlayground() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                   <h3 style={{ color: '#fff', fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: '800' }}>
-                    Active Venture Pipeline & Application Workflow
+                    {spec.app_name} Workflow Pipeline
                   </h3>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                    Live state transitions tracking discovery through interview and offer conversion.
+                    Live state transitions tracking operations from ingestion to completed execution.
                   </p>
                 </div>
 
                 <button
                   className="btn-secondary-glass"
-                  onClick={() => triggerToast('✓ Added new automated opportunity to Kanban pipeline!')}
+                  onClick={() => triggerToast(`✓ Added new workstream item to ${spec.app_name} pipeline!`)}
                   style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem' }}
                 >
                   + Add Item
                 </button>
               </div>
 
-              {/* Kanban Columns */}
+              {/* Dynamic Kanban Columns */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-                {[
-                  { title: '1. Discovered', count: 14, color: '#38BDF8', item: entities[0] },
-                  { title: '2. AI Tailoring', count: 6, color: '#FB923C', item: entities[2] },
-                  { title: '3. Submitted', count: 9, color: '#8B5CF6', item: entities[1] },
-                  { title: '4. Interviewing / Offer', count: 3, color: '#10B981', item: entities[3] || entities[0] },
-                ].map((col, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: 'rgba(5, 8, 16, 0.7)',
-                      borderRadius: '10px',
-                      border: `1px solid ${col.color}44`,
-                      padding: '1rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.75rem',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
-                      <span style={{ color: col.color, fontWeight: '700', fontSize: '0.85rem', fontFamily: 'var(--font-display)' }}>
-                        {col.title}
-                      </span>
-                      <span style={{ background: `${col.color}22`, color: col.color, padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', fontFamily: 'var(--font-mono)' }}>
-                        {col.count}
-                      </span>
-                    </div>
+                {kanbanColumns.map((col, idx) => {
+                  const colors = ['#38BDF8', '#FB923C', '#8B5CF6', '#10B981'];
+                  const colColor = colors[idx % colors.length];
+                  const assignedItem = entities[idx % entities.length];
 
-                    {/* Kanban Card */}
-                    {col.item && (
-                      <div
-                        onClick={() => triggerToast(`Clicked Kanban Card: ${col.item.title}`)}
-                        style={{
-                          background: 'rgba(14, 21, 38, 0.8)',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border-subtle)',
-                          padding: '0.85rem',
-                          cursor: 'pointer',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
-                        }}
-                      >
-                        <div style={{ color: '#fff', fontSize: '0.88rem', fontWeight: '700', marginBottom: '0.25rem' }}>
-                          {col.item.title}
-                        </div>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-                          {col.item.company}
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
-                          <span style={{ color: '#10B981', fontSize: '0.72rem', fontWeight: '700' }}>{col.item.compensation}</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{col.item.deadline}</span>
-                        </div>
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        background: 'rgba(5, 8, 16, 0.7)',
+                        borderRadius: '10px',
+                        border: `1px solid ${colColor}44`,
+                        padding: '1rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.75rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
+                        <span style={{ color: colColor, fontWeight: '700', fontSize: '0.85rem', fontFamily: 'var(--font-display)' }}>
+                          {col.column || col.title}
+                        </span>
+                        <span style={{ background: `${colColor}22`, color: colColor, padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.72rem', fontFamily: 'var(--font-mono)' }}>
+                          {col.count || 5}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {assignedItem && (
+                        <div
+                          onClick={() => triggerToast(`Clicked Pipeline Card: ${assignedItem.title}`)}
+                          style={{
+                            background: 'rgba(14, 21, 38, 0.8)',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-subtle)',
+                            padding: '0.85rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                          }}
+                        >
+                          <div style={{ color: '#fff', fontSize: '0.88rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+                            {assignedItem.title}
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                            {assignedItem.company}
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
+                            <span style={{ color: '#10B981', fontSize: '0.72rem', fontWeight: '700' }}>{assignedItem.compensation}</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{assignedItem.deadline}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* SCREEN 4: AI TAILOR & GENERATOR */}
+          {/* SCREEN 4: AI INTELLIGENCE GENERATOR */}
           {activeScreenId === 'assistant' && (
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
               <div className="detail-section-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <div className="detail-section-title">
                     <span>✨</span>
-                    <span>AUTONOMOUS AI APPLICATION TAILORING ENGINE</span>
+                    <span>{formTitle}</span>
                   </div>
                   <EvidenceBadge type="RECOMMENDATION" />
                 </div>
@@ -544,7 +719,7 @@ export default function MVPPlayground() {
                 <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
-                      Target Opportunity
+                      Target Workstream / Entity
                     </label>
                     <select
                       value={selectedItem?.id || entities[0]?.id}
@@ -564,22 +739,22 @@ export default function MVPPlayground() {
 
                   <div>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
-                      Positioning & Narrative Tone
+                      Generation Tone & Execution Persona
                     </label>
                     <select style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', background: 'rgba(5, 8, 16, 0.8)', border: '1px solid var(--border-subtle)', color: '#fff', fontFamily: 'var(--font-display)' }}>
-                      <option>Technical & Rigorous (AI Engineer / Architect)</option>
-                      <option>Product & Strategic (Product Leader)</option>
-                      <option>High Velocity & Results-Driven (Startup Generalist)</option>
+                      <option>Technical & Rigorous (AI Engineer / System Architect)</option>
+                      <option>Strategic & Executive (Founder / Product Leader)</option>
+                      <option>Rapid & Automated (Autonomous Agent)</option>
                     </select>
                   </div>
 
                   <div>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
-                      Custom Experience Highlights / Keywords
+                      Specific Constraints & Key Parameters
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="e.g. Highlight React 19, FastAPI multi-agent systems, and 3x latency optimization..."
+                      placeholder={`e.g. Optimize for high accuracy, low latency, and tailored parameters for ${spec.app_name}...`}
                       style={{ width: '100%', padding: '0.65rem', borderRadius: '6px', background: 'rgba(5, 8, 16, 0.8)', border: '1px solid var(--border-subtle)', color: '#fff', fontFamily: 'var(--font-display)' }}
                     />
                   </div>
@@ -590,11 +765,11 @@ export default function MVPPlayground() {
                     className="btn-primary-glow"
                     style={{ padding: '0.85rem', fontSize: '0.95rem' }}
                   >
-                    {isGenerating ? '⚡ Synthesizing Custom Package...' : '✨ Generate AI Application Package'}
+                    {isGenerating ? `⚡ Synthesizing Intelligence for ${spec.app_name}...` : `✨ Execute AI Generation for ${spec.app_name}`}
                   </button>
                 </form>
 
-                {/* Generated Result Output Box */}
+                {/* Generated Output Box */}
                 {generatedOutput && (
                   <motion.div
                     initial={{ opacity: 0, y: 15 }}
@@ -621,10 +796,10 @@ export default function MVPPlayground() {
                     <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
                       <button
                         className="btn-primary-glow"
-                        onClick={() => triggerToast('✓ Dossier exported and submitted to pipeline!')}
+                        onClick={() => triggerToast(`✓ Exported ${spec.app_name} package to live pipeline!`)}
                         style={{ fontSize: '0.8rem', padding: '0.45rem 1rem' }}
                       >
-                        📤 Submit Application Package
+                        📤 Submit / Deploy Package
                       </button>
                       <button
                         className="btn-secondary-glass"
@@ -646,27 +821,30 @@ export default function MVPPlayground() {
               <div className="detail-section-card" style={{ marginBottom: '1.5rem' }}>
                 <div className="detail-section-title" style={{ marginBottom: '1.25rem' }}>
                   <span>📊</span>
-                  <span>FUNNEL VELOCITY & CONVERSION TELEMETRY</span>
+                  <span>{spec.app_name} FUNNEL VELOCITY & PERFORMANCE TELEMETRY</span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-                  {[
-                    { label: '1. Opportunities Scanned & Scraped', count: 480, pct: 100, color: '#38BDF8' },
-                    { label: '2. High-Affinity AI Matches (>85%)', count: 142, pct: 30, color: '#00F0FF' },
-                    { label: '3. Custom AI Packages Tailored', count: 38, pct: 8, color: '#FB923C' },
-                    { label: '4. Responses & Interviews Triggered', count: 12, pct: 2.5, color: '#8B5CF6' },
-                    { label: '5. Offers / Successful Placements', count: 4, pct: 0.8, color: '#10B981' },
-                  ].map((bar, i) => (
-                    <div key={i}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.25rem' }}>
-                        <span style={{ color: '#fff' }}>{bar.label}</span>
-                        <span style={{ fontFamily: 'var(--font-mono)', color: bar.color, fontWeight: '700' }}>{bar.count} items</span>
+                  {analyticsBars.map((bar, i) => {
+                    const colors = ['#38BDF8', '#00F0FF', '#FB923C', '#8B5CF6', '#10B981'];
+                    const color = colors[i % colors.length];
+                    const maxVal = analyticsBars[0]?.value || 500;
+                    const pct = Math.max(Math.round((bar.value / maxVal) * 100), 6);
+
+                    return (
+                      <div key={i}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.25rem' }}>
+                          <span style={{ color: '#fff' }}>{bar.label}</span>
+                          <span style={{ fontFamily: 'var(--font-mono)', color: color, fontWeight: '700' }}>
+                            {bar.value} items
+                          </span>
+                        </div>
+                        <div style={{ width: '100%', height: '10px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '5px', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: '5px' }} />
+                        </div>
                       </div>
-                      <div style={{ width: '100%', height: '10px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{ width: `${Math.max(bar.pct, 4)}%`, height: '100%', background: bar.color, borderRadius: '5px' }} />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -674,7 +852,7 @@ export default function MVPPlayground() {
         </div>
       </div>
 
-      {/* Floating Toast Message */}
+      {/* Floating Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
           <motion.div

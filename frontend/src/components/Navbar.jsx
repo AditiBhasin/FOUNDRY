@@ -67,7 +67,7 @@ export default function Navbar() {
       <div className="nav-actions">
         <div className={`health-badge ${backendHealth.healthy ? '' : 'offline'}`}>
           <span className="health-dot" />
-          <span>{backendHealth.healthy ? 'Ollama Online' : 'FastAPI Offline'}</span>
+          <span>{backendHealth.healthy ? 'FastAPI Online' : 'FastAPI Offline'}</span>
         </div>
 
         <button className="btn-reset" onClick={resetApp} title="Reset to Start">

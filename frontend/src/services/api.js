@@ -5,7 +5,7 @@
  * Pure real backend integration with zero simulated or fake data generation.
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = 'https://foundry-production-3adb.up.railway.app';
 
 /**
  * Check backend health status
